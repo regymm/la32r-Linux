@@ -1,10 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
  * Copyright (C) 2020-2021 Loongson Technology Corporation Limited
- *
- * Derived from MIPS:
- * Copyright (C) 1994, 95, 96, 97, 98, 99, 2000, 2003 Ralf Baechle
- * Copyright (C) 1999, 2000, 2001 Silicon Graphics, Inc.
  */
 #ifndef _ASM_PGTABLE_64_H
 #define _ASM_PGTABLE_64_H

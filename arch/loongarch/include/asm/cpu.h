@@ -84,7 +84,7 @@ enum cpu_type_enum {
 #define CPU_FEATURE_LVZ			8	/* CPU has Virtualization extension */
 #define CPU_FEATURE_LBT_X86		9	/* CPU has X86 Binary Translation */
 #define CPU_FEATURE_LBT_ARM		10	/* CPU has ARM Binary Translation */
-#define CPU_FEATURE_LBT_MIPS		11	/* CPU has MIPS Binary Translation */
+#define CPU_FEATURE_LBT_MIPS	11  /* CPU has MIPS Binary Translation */
 #define CPU_FEATURE_TLB			12	/* CPU has TLB */
 #define CPU_FEATURE_CSR			13	/* CPU has CSR feature */
 #define CPU_FEATURE_WATCH		14	/* CPU has watchpoint registers */
