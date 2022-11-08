@@ -1558,6 +1558,7 @@ static int dmfe_pltfr_probe(struct platform_device *pdev)
 	int irq;
 	struct net_device *ndev;
 
+	printk("============== %s %d\n", __func__, __LINE__);
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res)
 		return -ENODEV;

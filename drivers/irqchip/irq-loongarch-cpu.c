@@ -66,7 +66,8 @@ int __init loongarch_cpu_irq_init(struct device_node *of_node, struct device_nod
 	clear_csr_ecfg(ECFG0_IM);
 	clear_csr_estat(ESTATF_IP);
 
-	irq_domain = irq_domain_add_simple(of_node, EXCCODE_INT_NUM,
+	//irq_domain = irq_domain_add_simple(of_node, EXCCODE_INT_NUM,
+	irq_domain = irq_domain_add_simple(of_node, EXCCODE_INT_NUM + 64,
 		     LOONGSON_CPU_IRQ_BASE, &loongarch_cpu_intc_irq_domain_ops, NULL);
 
 	if (!irq_domain)

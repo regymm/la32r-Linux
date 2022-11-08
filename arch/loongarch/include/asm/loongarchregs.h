@@ -1671,7 +1671,8 @@ __BUILD_CSR_OP(tlbidx)
 #define EXCCODE_TIMER       75
 #define EXCCODE_IPI         76
 #define EXCCODE_NMI         77
-#define EXCCODE_INT_END     78
+#define EXCCODE_INT_END     78		//todo
+//#define EXCCODE_INT_END     78 + 64
 #define EXCCODE_INT_NUM	    (EXCCODE_INT_END - EXCCODE_INT_START)
 
 /* FPU register names */

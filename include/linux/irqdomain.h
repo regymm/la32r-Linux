@@ -422,9 +422,10 @@ static inline unsigned int irq_find_mapping(struct irq_domain *domain,
 {
 	unsigned int irq;
 
-	if (__irq_resolve_mapping(domain, hwirq, &irq))
+	if (__irq_resolve_mapping(domain, hwirq, &irq)) {
+		printk("==========[%s] [%d}=======hwirq is %ld, irq is %d\n", __func__, __LINE__, hwirq, irq);
 		return irq;
-
+	}
 	return 0;
 }
 
