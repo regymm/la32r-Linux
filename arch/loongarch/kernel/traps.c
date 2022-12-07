@@ -585,11 +585,12 @@ void do_vi(int irq)
 
 void set_vi_handler(int n, vi_handler_t addr)
 {
+#if 0
 	if ((n < EXCCODE_INT_START) || (n >= EXCCODE_INT_END)) {
 		pr_err("Set invalid vector handler[%d]\n", n);
 		return;
 	}
-
+#endif
 	ip_handlers[n - EXCCODE_INT_START] = addr;
 }
 

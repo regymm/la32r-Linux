@@ -27,6 +27,8 @@ struct fwnode_handle *acpi_liointc_handle;
 struct fwnode_handle *acpi_msidomain_handle;
 struct fwnode_handle *acpi_picdomain_handle[MAX_PCH_PICS];
 
+
+
 #define LS1X_IRQ_BASE			LOONGSON_CPU_IRQ_BASE + 13
 #define LS1X_IRQ(n, x)			(LS1X_IRQ_BASE + (n << 5) + (x))
 
@@ -185,7 +187,6 @@ static void __init ls1x_irq_init(int base)
 static void ls1x_irq_dispatch(int n)
 {
 	u32 int_status, irq;
-
 	//printk("####ls1x interrupt :n=%d\n", n);
 	/* Get pending sources, masked by current enables */
 	int_status = __raw_readl(LS1X_INTC_INTISR(n)) &
@@ -207,12 +208,14 @@ void mach_irq_dispatch(unsigned int pending)
 		do_IRQ(LOONGSON_TIMER_IRQ);
 //	if (pending & 0x20)
 //		do_IRQ(4);
-	if (pending & 0x4) {
+    else if (pending & 0x4) {
 		ls1x_irq_dispatch(0); 	/* IP2 */
 	}
-	if (pending & 0x8) {
+    else if (pending & 0x8) {
 		ls1x_irq_dispatch(1); /* IP3 */
 	}
+    else
+		spurious_interrupt();
 }
 
 asmlinkage void plat_irq_dispatch(void)
@@ -254,5 +257,6 @@ void __init arch_init_irq(void)
 	setup_IRQ();
 	ls1x_irq_init(LS1X_IRQ_BASE);
 
-	set_csr_ecfg(ECFGF_IP0 | ECFGF_IP1 |ECFGF_IP2 | ECFGF_IP3| ECFGF_IPI | ECFGF_PC);
+//	set_csr_ecfg(ECFGF_IP0 | ECFGF_IP1 |ECFGF_IP2 | ECFGF_IP3| ECFGF_IPI | ECFGF_PC);
+	set_csr_ecfg(ECFGF_IP0 | ECFGF_IP1);
 }
