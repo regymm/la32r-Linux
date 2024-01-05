@@ -137,7 +137,7 @@ static int c67x00_drv_probe(struct platform_device *pdev)
 		ret = -EIO;
 		goto map_failed;
 	}
-
+        
 	spin_lock_init(&c67x00->hpi.lock);
 	c67x00->hpi.regstep = pdata->hpi_regstep;
 	c67x00->pdata = dev_get_platdata(&pdev->dev);
@@ -153,6 +153,7 @@ static int c67x00_drv_probe(struct platform_device *pdev)
 	}
 
 	ret = c67x00_ll_reset(c67x00);
+        pr_info("67x00_drv_probe===>c67x00->hpi.base:0x%x,c67x00->hpi.regstep:0x%x,c67x00_ll_reset-ret:%d\r\n",c67x00->hpi.base,c67x00->hpi.regstep,ret);
 	if (ret) {
 		dev_err(&pdev->dev, "Device reset failed\n");
 		goto reset_failed;

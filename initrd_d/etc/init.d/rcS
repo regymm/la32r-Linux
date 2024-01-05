@@ -1,0 +1,4 @@
+#! /bin/sh
+
+/bin/mount -a
+/bin/mount -t ext2 /dev/mmcblk0p1 /mnt

@@ -57,3 +57,11 @@ obj-$(CONFIG_HABANA_AI)		+= habanalabs/
 obj-$(CONFIG_UACCE)		+= uacce/
 obj-$(CONFIG_XILINX_SDFEC)	+= xilinx_sdfec.o
 obj-$(CONFIG_HISI_HIKEY_USB)	+= hisi_hikey_usb.o
+obj-y	+= gpio_drv.o
+obj-y	+= bx_i2c.o
+obj-y	+= oled_i2c.o 
+obj-y	+= bx_pwm.o
+obj-y	+= ds18b20.o
+obj-y	+= mygpioDrv.o
+obj-y   += hrtimer2.o
+

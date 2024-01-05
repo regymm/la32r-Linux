@@ -235,10 +235,12 @@ void c67x00_ll_hpi_disable_sofeop(struct c67x00_sie *sie)
 
 static inline int ll_recv_msg(struct c67x00_device *dev)
 {
-	u16 res;
+	u16 res; 
 
 	res = wait_for_completion_timeout(&dev->hpi.lcp.msg_received, 5 * HZ);
+        //res = wait_for_completion_timeout(&dev->hpi.lcp.msg_received, msecs_to_jiffies(25));
 	WARN_ON(!res);
+        pr_info("ll_recv_msg===>res:%d\r\n",res);
 
 	return (res == 0) ? -EIO : 0;
 }
@@ -384,9 +386,14 @@ void c67x00_ll_irq(struct c67x00_device *dev, u16 int_status)
 int c67x00_ll_reset(struct c67x00_device *dev)
 {
 	int rc;
+        u16 value;
 
 	mutex_lock(&dev->hpi.lcp.mutex);
 	hpi_send_mbox(dev, COMM_RESET);
+
+        value = hpi_recv_mbox(dev);
+        pr_info("c67x00_ll_reset===>value:0x%x\r\n",value);
+      
 	rc = ll_recv_msg(dev);
 	mutex_unlock(&dev->hpi.lcp.mutex);
 

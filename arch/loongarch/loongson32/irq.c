@@ -142,6 +142,7 @@ static struct irq_chip ls1x_irq_chip = {
 static void __init ls1x_irq_init(int base)
 {
 	int n;
+        u32 val;
 
 	/* Disable interrupts and clear pending,
 	 * setup all IRQs as high level triggered
@@ -155,9 +156,14 @@ static void __init ls1x_irq_init(int base)
 		//__raw_writel(n ? 0x0 : 0xe001, LS1X_INTC_INTEDGE(n));			//todo!!
 		__raw_writel(n ? 0x0 : 0x0, LS1X_INTC_INTEDGE(n));			//todo!!
 		if (0 == n)
+                {
 			//__raw_writel(0x80000001, LS1X_INTC_INTIEN(n));
-			__raw_writel(0x80004001, LS1X_INTC_INTIEN(n));
+			//__raw_writel(0x80004001, LS1X_INTC_INTIEN(n));
+                        __raw_writel(0x80204001, LS1X_INTC_INTIEN(n));
 			//__raw_writel(0x1, LS1X_INTC_INTIEN(n));
+                        val = (1<<21);
+                        __raw_writel(val, LS1X_INTC_INTEDGE(n));
+                }
 		if (1 == n)
 			__raw_writel(0xc, LS1X_INTC_INTIEN(n));
 	}
@@ -183,14 +189,17 @@ static void __init ls1x_irq_init(int base)
 //static unsigned int numm = 0;
 static void ls1x_irq_dispatch(int n)
 {
-	u32 int_status, irq;
+	u32 int_status, irq,val_sr,val_en;
 	//printk("####ls1x interrupt :n=%d\n", n);
 	/* Get pending sources, masked by current enables */
-	int_status = __raw_readl(LS1X_INTC_INTISR(n)) &
-			__raw_readl(LS1X_INTC_INTIEN(n));
+	int_status = __raw_readl(LS1X_INTC_INTISR(n)) & __raw_readl(LS1X_INTC_INTIEN(n));
+        val_sr = __raw_readl(LS1X_INTC_INTISR(n));
+        val_en = __raw_readl(LS1X_INTC_INTIEN(n));
+        //printk("####ls1x interrupt :n=%d,INTISR:0x%x,INTIEN:0x%x\n", n,val_sr,val_en);
 
 	if (int_status) {
 		irq = (unsigned int)LS1X_IRQ(n, __ffs(int_status));
+                //printk("####ls1x interrupt :n=%d,INTISR:0x%x,INTIEN:0x%x,irq:%d\n", n,val_sr,val_en,irq);
 		do_IRQ(irq);
 	}
 }
@@ -205,6 +214,7 @@ void mach_irq_dispatch(unsigned int pending)
 //	if (pending & 0x20)
 //		do_IRQ(4);
     else if (pending & 0x4) {
+                //pr_info("mach_irq_dispatch===>pending:0x%x\r\n",pending);
 		ls1x_irq_dispatch(0); 	/* IP2 */
 	}
     else if (pending & 0x8) {
@@ -254,5 +264,5 @@ void __init arch_init_irq(void)
 	ls1x_irq_init((unsigned int)LS1X_IRQ_BASE);
 
 //	set_csr_ecfg(ECFGF_IP0 | ECFGF_IP1 |ECFGF_IP2 | ECFGF_IP3| ECFGF_IPI | ECFGF_PC);
-	set_csr_ecfg(ECFGF_IP0 | ECFGF_IP1);
+	set_csr_ecfg(ECFGF_IP0 | ECFGF_IP1 |ECFGF_IP2);
 }

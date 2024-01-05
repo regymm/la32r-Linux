@@ -7,6 +7,8 @@
 
         aliases {
                 serial0 = &cpu_uart0;
+                /* serial1 = &cpu_uart2; */
+                /* serial2 = &cpu_uart3; */
         };
 
         chosen {
@@ -48,7 +50,7 @@
 		#size-cells = <1>;
 		ranges = <0x10000000 0x10000000 0x10000000 >;
 
-        cpu_uart0: serial@0x1fe001e0 {
+        cpu_uart0: serial@0x1fe40000 {
                         compatible = "ns16550a";
                         reg = < 0x1fe40000  0x10>;
                         clock-frequency = <33000000>;
@@ -58,6 +60,39 @@
                         interrupts = <13>;
                         no-loopback-test;
                 };
+
+        cpu_uart1: serial@0x1fe44000 {
+                        compatible = "ns16550a";
+                        reg = < 0x1fe44000  0x10>;
+                        clock-frequency = <33000000>;
+                        interrupt-parent = <&cpuic>;
+                        interrupts = <14>;
+                        no-loopback-test;
+                };
+
+        cpu_uart2: serial@0x1fe48000 {
+                        compatible = "ns16550a";
+                        reg = < 0x1fe48000  0x10>;
+                        clock-frequency = <33000000>;
+                        interrupt-parent = <&cpuic>;
+                        interrupts = <15>;
+                        no-loopback-test;
+                };
+
+        cpu_uart3: serial@0x1fe4c000 {
+                        compatible = "ns16550a";
+                        reg = < 0x1fe4c000  0x10>;
+                        clock-frequency = <33000000>;
+                        interrupt-parent = <&cpuic>;
+                        interrupts = <16>;
+                        no-loopback-test;
+                };
+
+        wdt: wdt@0x1fe5c0a0{
+                        compatible = "ls,bx-wdt";
+                        reg = < 0x1fe5c0a0  0x10>;
+                };
+
 
         gmac0: dmfe@0x1ff00000{
                         compatible = "dmfe";
