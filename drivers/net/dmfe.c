@@ -74,6 +74,7 @@
 #define SHOW_MEDIA_TYPE(mode) printk(" dmfe: Change Speed to %sMhz %s duplex\n",mode & 1 ?"100":"10", mode & 4 ? "full":"half");
 
 #define CONFIG_SOC_MAC_HARDWARE_ACCELERATE  1
+//#define DBG_FLAG3 1
 //#define DBG_FLAG 1
 //#define DBG_FLAG2 1
 #define MAC_REG_BASE    0xbf005200
@@ -322,7 +323,7 @@ static int dmfe_descriptor_init(struct net_device *dev)
 	}
     tp->buf_pool_start = tp->buf_pool_ptr;
     tp->buf_pool_dma_start = tp->buf_pool_dma_ptr;
-#ifdef DBG_FLAG
+#ifdef DBG_FLAG3
     printk("dmfe_descriptor_init===>tp->tx_desc_head:%x,tp->tx_desc_dma_head:%x\n",tp->tx_desc_head,tp->tx_desc_dma_head);
     printk("dmfe_descriptor_init===>tp->rx_desc_head:%x,tp->rx_desc_dma_head:%x\n",tp->rx_desc_head,tp->rx_desc_dma_head);
     printk("dmfe_descriptor_init===>tp->buf_pool_ptr:%x,tp->buf_pool_dma_ptr:%x\n",tp->buf_pool_ptr,tp->buf_pool_dma_ptr);
@@ -333,10 +334,10 @@ static int dmfe_descriptor_init(struct net_device *dev)
 	tx = tp->tx_desc_head;
 	tx_dma = tp->tx_desc_dma_head;
 	for (i = 0; i < TX_DESC_CNT; i++) {
-                tx->tx_buf_ptr = tmp_buf;
+        tx->tx_buf_ptr = tmp_buf;
 		tx->tdes0 = cpu_to_le32(0);
         tx->tdes1 = cpu_to_le32(0x81000000);
-		//tx->tdes1 = cpu_to_le32(0xE1000000);
+        tx->tdes2 = cpu_to_le32(tmp_buf_dma);
 		tx_dma += sizeof(struct tx_desc);
 		tx->tdes3 = cpu_to_le32(tx_dma);   // point to next descriptor
 		tx->next_desc = tx + 1;
@@ -379,6 +380,9 @@ static int dmfe_descriptor_init(struct net_device *dev)
 		}
 		rx->skb = skb;
 		rx->rdes2 = cpu_to_le32(dma_map_single(&dev->dev, skb->data, RX_BUF_SIZE, DMA_FROM_DEVICE));
+	#ifdef DBG_FLAG3
+		printk("dmfe_descriptor_init===>this rx->rdes2:%x\n", rx->rdes2);
+	#endif
 		// set the owner bit for MAC.
                 wmb();
 		rx->rdes0 = cpu_to_le32(0x80000000);
@@ -442,6 +446,9 @@ static void allocate_rx_buffer(struct net_device *dev)
 		}
 		rx->skb = skb;
 		rx->rdes2 = cpu_to_le32(dma_map_single(&dev->dev, skb->data, RX_BUF_SIZE, DMA_FROM_DEVICE));
+	#ifdef DBG_FLAG3
+		printk("allocate_rx_buffer===>this rx->rdes2:%x\n", rx->rdes2);
+	#endif
 
 	        wmb();
 		rx->rdes0 = cpu_to_le32(0x80000000);
@@ -489,6 +496,7 @@ printk("dmfe_hw_init===============================================>begin\n");
 	writel(tp->tx_desc_dma_head, tp->ioaddr+CSR4);
 
 	tp->media_mode = DMFE_100MFD;  // DMFE_AUTO;
+	//tp->media_mode = DMFE_10MFD;  // DMFE_AUTO;
 
 	if (dev->irq == DMFE1_IRQ) {
 		dmfe_set_phyxcer(dev);
@@ -752,12 +760,17 @@ static int dmfe_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	tp->tx_avail_cnt--;
 	tp->tx_packets++;
 	tx->skb = skb;
-        skb_copy_from_linear_data(skb, tx->tx_buf_ptr, skb->len);
-	tx->tdes2 = cpu_to_le32(dma_map_single(&dev->dev, skb->data, skb->len, DMA_TO_DEVICE));
+    skb_copy_from_linear_data(skb, tx->tx_buf_ptr, skb->len);
+#ifdef DBG_FLAG3
+	printk("dmfe_start_xmit===>this tx->tdes2:%x\n", tx->tdes2);
+#endif
 	tx->tdes1 = cpu_to_le32(0xE1000000 | skb->len);
 	tx->tdes0 = cpu_to_le32(0x80000000);
     //tx->tdes0 = cpu_to_le32(DES0_BASE);
 
+//	printk("%s===>this tx->tdes0:%x\n", __func__, tx->tdes0);
+//	printk("%s===>this tx->tdes1:%x\n", __func__, tx->tdes1);
+//	printk("%s===>this tx->tdes2:%x\n", __func__, tx->tdes2);
     //dma_cache_wback((unsigned long)tx, sizeof(struct tx_desc));
 
     writel(0x01, tp->ioaddr+CSR1);
@@ -788,6 +801,9 @@ static void dmfe_reuse_skb(struct net_device *dev, struct sk_buff * skb)
 	if (!(rx->rdes0 & cpu_to_le32(0x80000000))) {
 		rx->skb = skb;
 		rx->rdes2 = cpu_to_le32(dma_map_single(&dev->dev, skb->data, RX_BUF_SIZE, DMA_FROM_DEVICE));
+	#ifdef DBG_FLAG3
+		printk("dmfe_reuse_skb===>this rx->rdes2:%x\n", rx->rdes2);
+	#endif
 		wmb();
 		rx->rdes0 = cpu_to_le32(0x80000000);
 
@@ -957,6 +973,9 @@ printk("dmfe_rx_clean===================================>start\n");
 					panic("dmfe no memory\n");
 				}
 				rx->rdes2 = cpu_to_le32(dma_map_single(&dev->dev, rx->skb->data, RX_BUF_SIZE, DMA_FROM_DEVICE));
+			#ifdef DBG_FLAG3
+				printk("dmfe_rx_clean===>this rx->rdes2:%x\n", rx->rdes2);
+			#endif
 			}
 		}
                 wmb();
@@ -989,7 +1008,6 @@ static void dmfe_tx_clean(struct net_device *dev)
 			break;
 		}
 
-                //tp->tx_packets--;
 		tp->stats.tx_packets++;
 		if (tdes0 != 0x7FFFFFFF) {
 			tp->stats.collisions += (tdes0 >> 3) & 0xF;
@@ -1031,7 +1049,7 @@ static void dmfe_tx_clean(struct net_device *dev)
 	}
 	tp->mac_cur_tx = tx;
 	writel(0x01, tp->ioaddr+CSR1);
-        udelay(1000);
+    //udelay(1000);
 	netif_trans_update(dev);
 
 }
@@ -1081,7 +1099,7 @@ static irqreturn_t dmfe_interrupt (int irq, void *dev_instance)
 	if (tp->dm910x_chk_mode & 0x2) {
 		tp->dm910x_chk_mode = 0x4;
 		tp->cr6_data |= 0x100;
-		update_csr6(tp->cr6_data, tp->ioaddr);
+		update_csr6(tp->cr6_data, tp->ioaddr + CSR6);
 	}
 
 	handle = IRQ_HANDLED;
@@ -1114,9 +1132,9 @@ static void send_filter_frame(struct net_device *dev,int mc_cnt)
 	u32 * suptr;
 	int i;
 
-
-	tx = tp->mac_cur_tx;
+	tx = tp->cpu_cur_tx;
 	suptr = (u32 *) tx->tx_buf_ptr;
+
         for (i = 0; i < 6; i++)
 		dev->dev_addr[i] = hwaddr[i];
 
@@ -1146,26 +1164,20 @@ static void send_filter_frame(struct net_device *dev,int mc_cnt)
 	}
 
 	/* prepare the setup frame */
-	tp->mac_cur_tx = tx->next_desc;
+	tp->cpu_cur_tx = tx->next_desc;
 	tx->tdes1 = cpu_to_le32(0x890000c0);
 
-	/* Resource Check and Send the setup packet */
-	if (!tp->tx_packets) {
-		/* Resource Empty */
-		tp->tx_packets++;
-		tx->tdes0 = cpu_to_le32(0x80000000);
+    /* Resource Empty */
+    tp->tx_packets++;
+    tx->tdes0 = cpu_to_le32(0x80000000);
 
-        //dma_cache_wback((unsigned long)tx, sizeof(struct tx_desc));
+    //dma_cache_wback((unsigned long)tx, sizeof(struct tx_desc));
 
-        update_csr6(tp->cr6_data | 0x2000, tp->ioaddr);
-		dw32(CSR1, 0x1);	/* Issue Tx polling */
-		update_csr6(tp->cr6_data, tp->ioaddr);
-		netif_trans_update(dev);
-	} else{
-		tp->tx_queue_cnt++;	/* Put in TX queue */
-
-        //dma_cache_wback((unsigned long)tx, sizeof(struct tx_desc));
-    }
+    update_csr6(tp->cr6_data | 0x2000, tp->ioaddr + CSR6);
+    dw32(CSR1, 0x1);	/* Issue Tx polling */
+    update_csr6(tp->cr6_data, tp->ioaddr + CSR6);
+    netif_trans_update(dev);
+    while (tx->tdes0 & cpu_to_le32(0x80000000));
 }
 
 static void send_filter_frame2(struct net_device *dev, int mc_cnt)
@@ -1302,7 +1314,9 @@ static void update_csr6(u32 val, void *ioaddr)
 {
 	writel((val & (~0x2002)), ioaddr);
 	udelay(5);
-	writel((val | 0x2002), ioaddr);
+	//writel((val | 0x2002), ioaddr);
+	writel((val | 0x602002), ioaddr);
+	
 	udelay(5);
 }
 
@@ -1343,7 +1357,6 @@ static void dmfe_set_phyxcer(struct net_device *dev)
 	struct dmfe_private 	*tp = netdev_priv(dev);
 	u16 	phy_reg;
 	int 	i = 0;
-
 	/* restart auto negotion */
 	phy_reg = phy_read(tp->ioaddr, tp->phy_addr, 0, tp->chip_id);
 	phy_write(tp->ioaddr, tp->phy_addr, 0, 0x200|phy_reg, tp->chip_id);
@@ -1385,6 +1398,12 @@ static void dmfe_set_phyxcer(struct net_device *dev)
 	}
 	phy_write(tp->ioaddr, tp->phy_addr, 4, phy_reg, tp->chip_id);
 
+#if 0
+	phy_reg = phy_read(tp->ioaddr, tp->phy_addr, 0, tp->chip_id);
+	phy_reg &= ~(1 << 12); /* to close th auto negotiation */
+	phy_reg |= 1 << 8; /* Full duplex mode */
+	phy_reg &= ~(1 << 13); /* 10Mbps mode */
+#endif
 	/* Restart Auto-Negotiation */
 	phy_write(tp->ioaddr, tp->phy_addr, 0, 0x1200, tp->chip_id);
 
