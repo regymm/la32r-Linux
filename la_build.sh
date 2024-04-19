@@ -12,4 +12,4 @@ fi
 echo "----------------output ${OUT}----------------"
 
 make menuconfig O=${OUT}
-make vmlinux -j  O=${OUT} 2>&1 | tee -a build_error.log
+make vmlinux -j`nproc` O=${OUT} 2>&1 | tee -a build_error.log
